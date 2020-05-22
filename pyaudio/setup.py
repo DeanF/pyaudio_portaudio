@@ -107,7 +107,7 @@ else:
             extra_link_args += ["-lwinmm","-lole32","-luuid"]
         else:
             external_libraries += ["winmm","ole32","uuid","advapi32","user32"]
-            extra_link_args += ["/NODEFAULTLIB:MSVCRT"]
+            #extra_link_args += ["/NODEFAULTLIB:MSVCRT"]
 
     elif sys.platform == 'linux2':
         extra_link_args += ['-lrt', '-lm', '-lpthread']
@@ -116,17 +116,17 @@ else:
         # JACK, since that's common today.
         extra_link_args += ['-lasound', '-ljack']
 
-setup(name='PyAudio',
+setup(name='PyAudioExclusive',
       version=__version__,
       author="Hubert Pham",
       url="http://people.csail.mit.edu/hubert/pyaudio/",
       description='PortAudio Python Bindings',
       long_description=__doc__.lstrip(),
       scripts=scripts,
-      py_modules=['pyaudio'],
+      py_modules=['pyaudioexclusive'],
       package_dir={'': 'src'},
       ext_modules=[
-    Extension('_portaudio',
+    Extension('_portaudioexclusive',
               sources=pyaudio_module_sources,
               include_dirs=include_dirs,
               define_macros=defines,

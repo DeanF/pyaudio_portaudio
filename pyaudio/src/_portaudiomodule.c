@@ -321,7 +321,7 @@ static PyTypeObject _pyAudio_paDeviceInfoType = {
     // clang-format off
   PyVarObject_HEAD_INIT(NULL, 0)
     // clang-format on
-    "_portaudio.paDeviceInfo",                 /*tp_name*/
+    "_portaudioexclusive.paDeviceInfo",                 /*tp_name*/
     sizeof(_pyAudio_paDeviceInfo),             /*tp_basicsize*/
     0,                                         /*tp_itemsize*/
     (destructor)_pyAudio_paDeviceInfo_dealloc, /*tp_dealloc*/
@@ -482,7 +482,7 @@ static PyTypeObject _pyAudio_paHostApiInfoType = {
     // clang-format off
   PyVarObject_HEAD_INIT(NULL, 0)
     // clang-format on
-    "_portaudio.paHostApiInfo",                 /*tp_name*/
+    "_portaudioexclusive.paHostApiInfo",                 /*tp_name*/
     sizeof(_pyAudio_paHostApiInfo),             /*tp_basicsize*/
     0,                                          /*tp_itemsize*/
     (destructor)_pyAudio_paHostApiInfo_dealloc, /*tp_dealloc*/
@@ -703,7 +703,7 @@ static PyTypeObject _pyAudio_MacOSX_hostApiSpecificStreamInfoType = {
     // clang-format off
   PyVarObject_HEAD_INIT(NULL, 0)
     // clang-format on
-    "_portaudio.PaMacCoreStreamInfo",                  /*tp_name*/
+    "_portaudioexclusive.PaMacCoreStreamInfo",                  /*tp_name*/
     sizeof(_pyAudio_MacOSX_hostApiSpecificStreamInfo), /*tp_basicsize*/
     0,                                                 /*tp_itemsize*/
     /*tp_dealloc*/
@@ -904,7 +904,7 @@ static PyTypeObject _pyAudio_StreamType = {
     // clang-format off
   PyVarObject_HEAD_INIT(NULL, 0)
     // clang-format on
-    "_portaudio.Stream",                 /*tp_name*/
+    "_portaudioexclusive.Stream",                 /*tp_name*/
     sizeof(_pyAudio_Stream),             /*tp_basicsize*/
     0,                                   /*tp_itemsize*/
     (destructor)_pyAudio_Stream_dealloc, /*tp_dealloc*/
@@ -1559,7 +1559,14 @@ static PyObject *pa_open(PyObject *self, PyObject *args, PyObject *kwargs) {
     outputParameters->sampleFormat = format;
     outputParameters->suggestedLatency =
         Pa_GetDeviceInfo(outputParameters->device)->defaultLowOutputLatency;
-    outputParameters->hostApiSpecificStreamInfo = NULL;
+	struct PaWasapiStreamInfo wasapiInfo;
+	wasapiInfo.size = sizeof(PaWasapiStreamInfo);
+	wasapiInfo.hostApiType = paWASAPI;
+	wasapiInfo.version = 1;
+	wasapiInfo.flags = (paWinWasapiExclusive|paWinWasapiThreadPriority);
+	wasapiInfo.threadPriority = eThreadPriorityProAudio;
+
+	outputParameters->hostApiSpecificStreamInfo = (&wasapiInfo);
 
 #ifdef MACOSX
     if (outputHostSpecificStreamInfo) {
@@ -2292,7 +2299,7 @@ static PyObject *pa_get_stream_read_available(PyObject *self, PyObject *args) {
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef moduledef = {  //
     PyModuleDef_HEAD_INIT,
-    "_portaudio",
+    "_portaudioexclusive",
     NULL,
     -1,
     paMethods,
@@ -2304,9 +2311,9 @@ static struct PyModuleDef moduledef = {  //
 
 PyMODINIT_FUNC
 #if PY_MAJOR_VERSION >= 3
-PyInit__portaudio(void)
+PyInit__portaudioexclusive(void)
 #else
-init_portaudio(void)
+init_portaudioexclusive(void)
 #endif
 {
   PyObject *m;
@@ -2338,7 +2345,7 @@ init_portaudio(void)
 #if PY_MAJOR_VERSION >= 3
   m = PyModule_Create(&moduledef);
 #else
-  m = Py_InitModule("_portaudio", paMethods);
+  m = Py_InitModule("_portaudioexclusive", paMethods);
 #endif
 
   Py_INCREF(&_pyAudio_StreamType);
